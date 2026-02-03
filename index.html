@@ -1,10 +1,10 @@
+
 <!DOCTYPE html>
-<!-- internal version: r77
-  - モバイル（スマホ）でのチュートリアル位置ずれを修正
-    * visualViewport の offset/resize/scroll に追従
-    * scrollIntoView 後の計測を rAF + scrollend で安定化
-    * パネル/フォーカスの座標を常に「可視ビューポート」基準に補正
-  - 既存機能（入力安定化、permille丸め、解説ボタン、ミニフッター、gtag、STEPは7つ）を維持
+<!-- internal version: r87
+  修正内容
+  - 限界利益率（CMR, %）の入力欄で小数点が落ちる問題を修正
+    * "52." のような入力途中の末尾ドットを維持し、続けて "52.1" を確実に入力できるようにする
+    * 端末差（, や ・ 等）も小数点として扱い '.' に正規化
 -->
 <html lang="ja">
 <head>
@@ -26,7 +26,14 @@
 <style>
 :root{--brand:#578899;--brand-600:#4b7481;--ink:#0f172a;--line:#e5e7eb;--line-dark:#cbd5e1;--danger:#b91c1c}
 *{box-sizing:border-box}
-html,body{margin:0;height:100%;width:100%;position:fixed;inset:0;overflow:auto;overflow-x:hidden;-webkit-text-size-adjust:100%;-webkit-tap-highlight-color:transparent;font:16px/1.6 -apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,"Hiragino Kaku Gothic ProN","Noto Sans JP","Yu Gothic UI","Yu Gothic",Meiryo,sans-serif;color:var(--ink);background:#fff}
+html,body{
+  margin:0;height:100%;width:100%;
+  inset:0;overflow:auto;overflow-x:hidden;
+  -webkit-text-size-adjust:100%;
+  -webkit-tap-highlight-color:transparent;
+  font:16px/1.6 -apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,"Hiragino Kaku Gothic ProN","Noto Sans JP","Yu Gothic UI","Yu Gothic",Meiryo,sans-serif;
+  color:var(--ink);background:#fff
+}
 .page{min-height:100%;padding:16px}
 .stack{max-width:1120px;width:100%;margin:0 auto}
 
@@ -41,36 +48,49 @@ html,body{margin:0;height:100%;width:100%;position:fixed;inset:0;overflow:auto;o
 .logo-link{display:inline-flex;align-items:center;text-decoration:none;line-height:0}
 h1{font-size:18px;margin:0}
 .title-actions{margin-left:auto;display:flex;gap:8px}
-.btn{appearance:none;border:1px solid var(--line-dark);background:#fff;border-radius:12px;padding:6px 10px;font-weight:700;cursor:pointer;color:#578899}
+.btn{
+  appearance:none;border:1px solid var(--line-dark);background:#fff;border-radius:12px;
+  padding:6px 10px;font-weight:800;cursor:pointer;color:#0f172a
+}
 .btn:hover{border-color:#94a3b8}
 .btn:active{transform:translateY(1px)}
+.btn.accent{color:#fff;background:var(--brand);border-color:var(--brand);box-shadow:0 10px 22px rgba(87,136,153,.28)}
+.btn.accent:active{background:var(--brand-600)}
 
-.note-top{background:#eef7fa;border:1px solid #d6e7ee;color:#0b3c4a;padding:8px 10px;border-radius:12px;margin:6px 0 10px;font-size:13px}
+.note-top{background:#eef7fa;border:1px solid #d6e7ee;color:#0b3c4a;padding:8px 10px;border-radius:12px;margin:6px 0 10px;font-size:13px;line-height:1.5}
 canvas{display:block;height:auto;border:1px solid var(--line);border-radius:12px;background:#fff;margin:0 auto;max-width:calc(100vw - 32px)}
-.btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
-button{appearance:none;border:0;border-radius:12px;padding:8px 12px;font-weight:700;cursor:pointer}
-.primary{background:var(--brand);color:#fff}.primary:active{background:var(--brand-600)}
+.btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+button{appearance:none;border:0;border-radius:12px;padding:10px 14px;font-weight:900;cursor:pointer}
+.primary{
+  background:var(--brand);color:#fff;
+  box-shadow:0 10px 24px rgba(87,136,153,.30);
+}
+.primary:active{background:var(--brand-600)}
 .secondary{background:#fff;color:#0f172a;border:1px solid var(--line-dark)}
-.result{font-size:16px;font-weight:700;margin-top:4px}.result.ng{color:var(--danger)}
+.secondary:hover{border-color:#94a3b8}
+.result{font-size:16px;font-weight:800;margin-top:6px}.result.ng{color:var(--danger)}
 .controls{display:grid;gap:8px}
 label.f{display:block;background:#fafafa;border:1px solid var(--line);border-radius:12px;padding:6px 8px}
 .f .row1{display:flex;align-items:center;justify-content:space-between;gap:8px}
-.f .row1 .ttl{font-weight:600;white-space:nowrap}
+.f .row1 .ttl{font-weight:700;white-space:nowrap}
 .f .row2{margin-top:6px}
-input[type="text"],input[type="number"]{width:96px;max-width:38vw;background:#fff;border:1px solid var(--line-dark);border-radius:8px;padding:8px;text-align:right}
+input[type="text"],input[type="number"]{
+  width:96px;max-width:38vw;background:#fff;border:1px solid var(--line-dark);
+  border-radius:8px;padding:8px;text-align:right;font-weight:800
+}
 input[type="range"]{appearance:none;width:100%;height:28px;background:transparent}
 input[type="range"]::-webkit-slider-runnable-track{height:8px;border-radius:999px;background:var(--line)}
 input[type="range"]::-webkit-slider-thumb{appearance:none;width:20px;height:20px;border-radius:50%;background:var(--brand);border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.2);margin-top:-6px}
 .challenge{border:1px dashed var(--line-dark);padding:10px;border-radius:12px;background:#fbfdfe}
-.guide{color:#334155;font-size:14px;font-weight:700;margin:2px 4px -2px}
+.guide{color:#334155;font-size:14px;font-weight:900;margin:2px 4px -2px}
 .challenge .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:6px}
 .metrics{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
 .m{background:#fafafa;border:1px solid var(--line);border-radius:12px;padding:10px}
-.m .k{color:#334155;font-size:12px}.m .v{font-weight:700;margin-top:4px}
+.m .k{color:#334155;font-size:12px}.m .v{font-weight:900;margin-top:4px}
 .m.accent{background:#eef7fa;border-color:var(--brand);box-shadow:0 0 0 2px rgba(87,136,153,.35) inset, 0 4px 14px rgba(87,136,153,.18)}
 .m.em{background:#eef7fa}
-#targetLabel,#targetShown{font-weight:700}
-.calc-note{font-weight:700;color:#578899;background:#eef7fa;border:1px solid #d6e7ee;border-radius:8px;padding:6px 8px;margin-top:6px}
+#targetLabel,#targetShown{font-weight:900}
+.calc-note{font-weight:900;color:#578899;background:#eef7fa;border:1px solid #d6e7ee;border-radius:8px;padding:6px 8px;margin-top:6px}
 
 /* --- フッター（ミニ版） --- */
 footer.mk-mini{
@@ -95,40 +115,65 @@ footer.mk-mini a{
   input[type="text"],input[type="number"]{width:86px;padding:7px}
 }
 
-/* ===== チュートリアル（オーバーレイ/ハイライト/パネル） ===== */
+/* ===== チュートリアル（オーバーレイ/パネル） ===== */
 .mk-tour-mask{
-  position:fixed;inset:0;background:rgba(15,23,42,.56);
-  backdrop-filter:saturate(120%) blur(2px);
-  z-index:9998; /* 背景ぼかし層（対象より下） */
-}
-.mk-tour-focus{
-  position:fixed;border-radius:12px;
-  box-shadow:0 0 0 3px #fff, 0 0 0 6px rgba(87,136,153,.35), 0 10px 30px rgba(0,0,0,.35);
-  z-index:10001; /* 枠は対象より上、パネルより下 */
-  pointer-events:none;transition:transform .2s ease, width .2s ease, height .2s ease, left .2s ease, top .2s ease;
+  position:fixed;inset:0;
+  background:rgba(15,23,42,.52);
+  z-index:9998;
+  pointer-events:none; /* 操作を邪魔しない */
 }
 .mk-tour-panel{
-  position:fixed;z-index:10002; /* 最前面にパネル */
-  max-width:min(560px, 92vw);background:#fff;border:1px solid var(--line);border-radius:16px;
-  box-shadow:0 14px 36px rgba(0,0,0,.22);padding:12px
+  position:fixed;z-index:10002;
+  max-width:min(560px, 92vw);
+  background:#fff;border:1px solid var(--line);border-radius:16px;
+  box-shadow:0 14px 36px rgba(0,0,0,.22);
+  padding:12px;
+  max-height:min(62vh, 520px);
+  overflow:auto;
 }
 .mk-tour-head{display:flex;align-items:center;gap:8px;margin-bottom:6px}
-.mk-tour-step{font-size:12px;color:#475569}
-.mk-tour-title{font-weight:800}
+.mk-tour-step{font-size:12px;color:#475569;white-space:nowrap}
+.mk-tour-title{font-weight:900}
 .mk-tour-body{font-size:14px;color:#0f172a}
-.mk-tour-actions{display:flex;justify-content:flex-end;gap:6px;margin-top:10px}
-.mk-tour-actions .tbtn{border-radius:10px;border:1px solid var(--line-dark);background:#fff;padding:6px 10px;font-weight:700;cursor:pointer}
-.mk-tour-actions .tbtn.primary{background:var(--brand);border-color:var(--brand);color:#fff}
+.mk-tour-actions{display:flex;justify-content:flex-end;gap:6px;margin-top:10px;position:sticky;bottom:0;background:#fff;padding-top:8px}
+.mk-tour-actions .tbtn{border-radius:10px;border:1px solid var(--line-dark);background:#fff;padding:7px 11px;font-weight:900;cursor:pointer}
+.mk-tour-actions .tbtn.primary{background:var(--brand);border-color:var(--brand);color:#fff;box-shadow:0 10px 22px rgba(87,136,153,.30)}
 .mk-tour-actions .tbtn:disabled{opacity:.55;cursor:not-allowed}
 
-/* 対象要素を持ち上げ、ブラー前面でクッキリ表示 */
+/* 操作対象を持ち上げる（枠ではなく、要素自身を強調） */
 .mk-tour-elevate{
   position:relative !important;
-  z-index:10000 !important; /* mask(9998) より上、focus(10001)/panel(10002)より下 */
+  z-index:10001 !important;
   isolation:isolate;
+  box-shadow:0 0 0 3px rgba(255,255,255,.92), 0 0 0 8px rgba(87,136,153,.34);
+  border-radius:12px;
 }
+
+/* “押すべきボタン”をさらに目立たせる（パルス） */
+.mk-tour-pulse{
+  animation: mkPulse 1.05s infinite ease-in-out;
+  transform-origin:center;
+}
+@keyframes mkPulse{
+  0%   { transform:scale(1);   filter:drop-shadow(0 0 0 rgba(87,136,153,.0)); }
+  50%  { transform:scale(1.06); filter:drop-shadow(0 10px 18px rgba(87,136,153,.35)); }
+  100% { transform:scale(1);   filter:drop-shadow(0 0 0 rgba(87,136,153,.0)); }
+}
+.mk-tour-pulse.primary{
+  box-shadow:0 0 0 3px rgba(255,255,255,.95), 0 0 0 10px rgba(87,136,153,.28), 0 18px 30px rgba(87,136,153,.28);
+}
+
+/* スマホで「グラフを見ながら操作」したいステップ用（sticky化） */
+body.mk-tour-sticky-graph #cardGraph{
+  position:sticky;
+  top:10px;
+  z-index:10000; /* パネルより下 */
+}
+body.mk-tour-sticky-graph #cardGraph .note-top{display:none}
+body.mk-tour-sticky-graph #cardGraph canvas{max-height:38vh}
 </style>
 </head>
+
 <body>
 <div class="page">
   <div class="stack">
@@ -140,14 +185,17 @@ footer.mk-mini a{
           </a>
           <h1>ボールで学ぶ変動損益計算書</h1>
           <div class="title-actions">
-            <button id="openExplain" type="button" class="btn" aria-label="解説（別タブで開く）">解説</button>
+            <button id="openExplain" type="button" class="btn accent" aria-label="解説（別タブで開く）">解説</button>
             <button id="startTour" type="button" class="btn" aria-label="チュートリアル開始">チュートリアル</button>
           </div>
         </div>
 
         <div class="note-top">
-          ・固定費：越えるべきハードルの高さ／・売上高：ボールを落とす高さ／・限界利益：バウンドした頂点／・限界利益率：バウンドする割合<br>
-          バウンド頂点（限界利益）がハードル（固定費）を超えれば黒字です。
+          ・固定費：越えるべきハードルの高さ<br>
+          ・売上高：ボールを落とす高さ<br>
+          ・限界利益：バウンドした頂点<br>
+          ・限界利益率：バウンドする割合<br>
+          ※バウンド頂点（限界利益）がハードル（固定費）を超えれば黒字です。
         </div>
         <canvas id="cv" width="860" height="420" aria-label="学習キャンバス"></canvas>
         <div class="btns">
@@ -214,7 +262,7 @@ footer.mk-mini a{
       © <span id="cpy-year">2025</span> <a href="https://www.matsumoto-kaikei.or.jp/" target="_blank" rel="noopener license">税理士法人松本会計事務所</a> ｜ 
       <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank" rel="license noopener">CC BY-NC-SA 4.0</a> ｜ 
       <a href="/tool-portal/terms.html" target="_blank" rel="noopener">利用条件</a> ｜ 
-      <span id="build-rev">r77</span>（<span id="last-updated-date"></span>）
+      <span id="build-rev">r87</span>（<span id="last-updated-date"></span>）
     </footer>
   </div>
 </div>
@@ -222,7 +270,7 @@ footer.mk-mini a{
 <script>
 'use strict';
 (function(){
-  const VERSION='r77';
+  const VERSION='r87';
 
   // 年号 & 最終更新日（YYYY-MM-DD）を自動反映
   (function syncFooterMeta(){
@@ -256,14 +304,19 @@ footer.mk-mini a{
     const IS_IOS_MOBILE = /iPhone|iPod/i.test(navigator.userAgent)
        || (navigator.platform==='MacIntel' && navigator.maxTouchPoints>1 && window.innerWidth<820);
 
+    const IS_MOBILE = window.matchMedia && window.matchMedia('(max-width: 820px)').matches
+      ? true
+      : (/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) || window.innerWidth<820);
+
     const cv=$('cv'); if(!cv){ console.error(`[${VERSION}] canvas#cv が見つかりません。`); return; }
     const ctx=cv.getContext && cv.getContext('2d'); if(!ctx){ console.error(`[${VERSION}] 2Dコンテキスト取得不可`); return; }
 
-    // 「解説」ボタン：画像を別タブで開く（日本語ファイル名をエンコード）
+    // 「解説」ボタン：スマホは縦画像、PCは従来通り
     const explainBtn = $('openExplain');
     if(explainBtn){
       explainBtn.addEventListener('click', ()=>{
-        const url = encodeURI('変動PL.png');
+        const file = IS_MOBILE ? '変動PL縦.png' : '変動PL.png';
+        const url = encodeURI(file);
         window.open(url, '_blank', 'noopener');
       });
     }
@@ -309,34 +362,83 @@ footer.mk-mini a{
         if(count>=digitsLeft){ pos=i+1; break; }
       }
       if(digitsLeft===extractDigits(before).length) pos=formatted.length;
-      el.value = formatted; try{ el.setSelectionRange(pos,pos); }catch(_){}
+      el.value = formatted; try{ el.setSelectionRange(pos,pos); }catch(_){ }
       return n;
     }
+
+    // === r87: CMR入力の小数点維持・正規化強化 ===
     function cleanPercentString(s){
-      s=normalizeDigits(String(s??'')); s=s.replace(/[，、｡。．]/g,'.');
-      let out='',seen=false;
-      for(const ch of s){ if(/\d/.test(ch)) out+=ch; else if(ch==='.'&&!seen){ out+='.'; seen=true; } }
-      if(seen){ const [a,b='']=out.split('.'); out=a+'.'+b.slice(0,1); }
+      s = normalizeDigits(String(s ?? ''));
+      // 小数点として扱い得る記号を '.' に寄せる（端末/IME差の吸収）
+      s = s.replace(/[，、,｡。．·・･⋅∙٫٬]/g, '.');
+
+      let out = '';
+      let seenDot = false;
+      for(const ch of s){
+        if(/\d/.test(ch)){
+          out += ch;
+        }else if(ch === '.' && !seenDot){
+          out += '.';
+          seenDot = true;
+        }
+      }
+
+      // 先頭が '.' の場合は '0.' に補正
+      if(out.startsWith('.')) out = '0' + out;
+
+      // 小数は1桁まで。ただし "52." のような末尾ドットは維持
+      if(seenDot){
+        const [a, b=''] = out.split('.');
+        out = a + '.' + b.slice(0, 1); // bが空なら末尾'.'のまま
+      }
       return out;
     }
+
     function formatPercentInput(el){
-      if(composing.get(el)) return Number(el.value||0);
-      const before=String(el.value||''); const sel=el.selectionEnd ?? before.length;
-      const allowedLeft=cleanPercentString(before.slice(0,sel)).length;
-      let cleaned=cleanPercentString(before);
-      let num=Number(cleaned); if(!isFinite(num)) num=0; num=Math.min(100,Math.max(0,num));
-      if(cleaned.includes('.')){
-        const parts=String(num).split('.');
-        const decimals=Math.min(1,(cleanPercentString(before).split('.')[1]||'').length);
-        cleaned=parts[0]+(decimals?'.'+(parts[1]||'0').slice(0,decimals):'');
-      }else{
-        cleaned=String(Math.trunc(num));
+      if(composing.get(el)) return Number.parseFloat(el.value) || 0;
+
+      const before = String(el.value || '');
+      const sel = el.selectionEnd ?? before.length;
+
+      // カーソル左側の正規化済み長さ
+      const leftNorm = cleanPercentString(before.slice(0, sel));
+      const cleaned = cleanPercentString(before);
+
+      // 空は空のまま
+      if(cleaned === ''){
+        el.value = '';
+        return 0;
       }
-      el.value=cleaned;
-      let pos=0,cnt=0; for(let i=0;i<cleaned.length;i++){ if(/\d|\./.test(cleaned[i])) cnt++; if(cnt>=allowedLeft){ pos=i+1; break; } }
-      if(allowedLeft===cleanPercentString(before).length) pos=cleaned.length;
-      try{ el.setSelectionRange(pos,pos);}catch(_){}
-      return Number(cleaned||0);
+
+      const endsWithDot = cleaned.endsWith('.');
+
+      // 数値化は末尾ドットを除いて行う
+      const numBase = Number.parseFloat(endsWithDot ? cleaned.slice(0, -1) : cleaned);
+      let num = Number.isFinite(numBase) ? numBase : 0;
+      num = Math.min(100, Math.max(0, num));
+
+      let out;
+      if(endsWithDot){
+        // 入力途中の "52." を維持
+        out = String(Math.trunc(num)) + '.';
+      }else if(cleaned.includes('.')){
+        if(num >= 100){
+          out = '100';
+        }else{
+          const dec = (cleaned.split('.')[1] || '').slice(0, 1); // 1桁
+          out = String(Math.trunc(num)) + '.' + dec;
+        }
+      }else{
+        out = String(Math.trunc(num));
+      }
+
+      el.value = out;
+
+      // カーソル復元
+      const pos = Math.min(out.length, leftNorm.length);
+      try{ el.setSelectionRange(pos, pos); }catch(_){ }
+
+      return Number.parseFloat(out) || 0;
     }
 
     /* ===== 計算（permilleで丸め） ===== */
@@ -594,13 +696,19 @@ footer.mk-mini a{
           if(vy>0 && y>=ground){
             revealedByPlay=true; redrawOnly(); ball();
             const p=calc().profit;
+
+            window.__mk_tour = window.__mk_tour || {};
+            window.__mk_tour.lastPlayedAt = Date.now();
+            window.__mk_tour.lastPlayed = {...calc()};
+
             if(p>0){ resultEl.classList.remove('ng'); resultEl.textContent=`黒字達成！ 経常利益 ≈ ${jpy(p)}`; }
             else if(p<0){ const c=calc(); resultEl.classList.add('ng'); resultEl.textContent=`赤字（経常損失）… 損失 ≈ ${jpy(-p)} ／ あと ≈ ${jpy(Math.max(0, c.fixed - c.cm))} の限界利益が必要`; }
             else{ resultEl.classList.remove('ng'); resultEl.textContent=`損益分岐点！ ±0（トントン）`; }
+
             if(pendingCheck && pendingVals){
               targetShown.textContent = pendingVals.targetText;
-              diffMsgEl.innerHTML     = pendingVals.cls ? `<span class="${pendingVals.cls}">${pendingVals.msg}</span>` : pendingVals.msg;
-              statusEl.textContent    = pendingVals.statusText;
+              diffMsgEl.innerHTML      = pendingVals.cls ? `<span class="${pendingVals.cls}">${pendingVals.msg}</span>` : pendingVals.msg;
+              statusEl.textContent     = pendingVals.statusText;
               checkResult.style.display='block';
               metrics.style.display='grid';
               showTargetLine = isFinite(pendingVals.targetNum);
@@ -698,21 +806,169 @@ footer.mk-mini a{
       layout();
     })();
 
-    /* ===================== チュートリアル（スマホ位置ずれ対策込み） ===================== */
-    const TOUR_KEY='mkvpl_tour_dismissed_v2'; // ← キー更新（前の値を消さない）
+    /* ===================== チュートリアル（r86踏襲） ===================== */
+    const TOUR_KEY='mkvpl_tour_dismissed_v5';
+    window.__mk_tour = window.__mk_tour || {
+      lastPlayedAt: 0,
+      lastPlayed: null,
+      stepEnteredAt: 0,
+      baseline: null
+    };
+
+    function setDefaults(){ resetAll(); }
+    function resetTourFlags(){
+      window.__mk_tour.lastPlayedAt = 0;
+      window.__mk_tour.lastPlayed = null;
+      window.__mk_tour.baseline = calc();
+    }
+    function markBaseline(){ window.__mk_tour.baseline = calc(); }
+
     const steps = [
-      { sel: '.title-row',   title:'ようこそ！',             body:'このツールで「変動損益計算書（CVP）」の構造を、ボールの動きで直感的に学べます。右の「解説」で概念図も確認できます。' },
-      { sel: '#paramSales',  title:'売上高（S）',            body:'売上高はボールを落とす「高さ」。数値入力かスライダーで調整すると、リアルタイムでカンマ表示・グラフに反映されます。' },
-      { sel: '#paramCMR',    title:'限界利益率（CMR）',      body:'売上に対してどれだけ跳ね返るかの「バウンド率」。0〜100%の範囲で、小数1桁まで入力できます。' },
-      { sel: '#paramFixed',  title:'固定費（FC）',           body:'超えるべき「ハードルの高さ」。固定費を越えるほど、利益が確保されます。' },
-      { sel: '#play',        title:'黒字判定（再生ボタン）', body:'「黒字かどうか確認」を押すと、ボールが跳ねます。頂点（限界利益）がハードル（固定費）を越えれば黒字！' },
-      { sel: '#challengeBox',title:'チャレンジモード',       body:'チェックを入れると、ガイド順に「必要売上高（損益分岐点）」を自分で考え、答え合わせができます。' },
-      { sel: '#cardGraph',   title:'やってみよう',           body:'まずは「売上高」「限界利益率」「固定費」を動かし、ボールの動きと結果を観察してみましょう。では実践！' }
+      {
+        sel: '.title-row',
+        title:'① 概要（まずは「解説」を見てOK）',
+        body:'このツールは「変動損益計算書（CVP）」をボールで直感化します。<br><b>「解説」</b>ボタンを押して概念図を確認してみてください（別タブで開きます）。',
+        extraElevate:['.title-row','#openExplain','#startTour'],
+        pulse:['#openExplain'],
+        panelDock:'auto',
+        avoidSel:['.title-row'],
+        stickyGraph:false,
+        maskOpacity:0.52,
+        onEnter(){ setDefaults(); resetTourFlags(); }
+      },
+      {
+        sel: '#play',
+        title:'② まずはそのまま：「売上高＞固定費」ですが…',
+        body:'初期値のまま<b>「黒字かどうか確認」</b>を押してみてください。（ここでは数値は触らずにOKです）',
+        extraElevate:['#cardGraph','#cv','#play','#result'],
+        pulse:['#play'],
+        panelDock:'top',
+        avoidSel:['#play','#cv','#result'],
+        stickyGraph:true,
+        maskOpacity:0.52,
+        onEnter(){ markBaseline(); window.__mk_tour.stepEnteredAt = Date.now(); },
+        validate(){
+          const t = window.__mk_tour;
+          if(!t.lastPlayedAt || t.lastPlayedAt < t.stepEnteredAt) return {ok:false,msg:'下の「黒字かどうか確認」を押してください。'};
+          if(t.lastPlayed && t.lastPlayed.profit < 0) return {ok:true};
+          return {ok:false,msg:'赤字が確認できていません（念のためリセットして再度押してください）。'};
+        }
+      },
+      {
+        sel: '#paramSales',
+        title:'③-1 数値を動かしてみましょう：売上高',
+        body:'売上高（S）を上げる方向へ動かし、黒字にしてください。<br>最後に<b>「黒字かどうか確認」</b>を押して、黒字になればクリアです。',
+        extraElevate:['#cardGraph','#cv','#paramSales','#salesRange','#sales','#play','#result'],
+        pulse:['#play'],
+        panelDock:'auto',
+        avoidSel:['#paramSales','#salesRange','#sales','#play','#cv','#result'],
+        stickyGraph:true,
+        maskOpacity:0.52,
+        onEnter(){
+          setDefaults();
+          resetTourFlags();
+          markBaseline();
+          window.__mk_tour.stepEnteredAt = Date.now();
+        },
+        validate(){
+          const t = window.__mk_tour;
+          const b = t.baseline;
+          const now = calc();
+          if(now.sales <= b.sales) return {ok:false,msg:'売上高（S）を「増やす」方向（右）へ動かしてください。'};
+          if(!t.lastPlayedAt || t.lastPlayedAt < t.stepEnteredAt) return {ok:false,msg:'動かした後に「黒字かどうか確認」を押してください。'};
+          if(t.lastPlayed && t.lastPlayed.profit >= 0) return {ok:true};
+          return {ok:false,msg:'まだ黒字になっていません。売上高をもう少し上げて、再度「黒字かどうか確認」を押してください。'};
+        }
+      },
+      {
+        sel: '#paramCMR',
+        title:'③-2 数値を動かしてみましょう：限界利益率',
+        body:'限界利益率（CMR）を上げる方向へ動かし、黒字にしてください。<br>最後に<b>「黒字かどうか確認」</b>で黒字になればクリアです。',
+        extraElevate:['#cardGraph','#cv','#paramCMR','#cmrRange','#cmr','#play','#result'],
+        pulse:['#play'],
+        panelDock:'auto',
+        avoidSel:['#paramCMR','#cmrRange','#cmr','#play','#cv','#result'],
+        stickyGraph:true,
+        maskOpacity:0.52,
+        onEnter(){
+          setDefaults();
+          resetTourFlags();
+          markBaseline();
+          window.__mk_tour.stepEnteredAt = Date.now();
+        },
+        validate(){
+          const t = window.__mk_tour;
+          const b = t.baseline;
+          const now = calc();
+          if(now.cmrPermille <= b.cmrPermille) return {ok:false,msg:'限界利益率（CMR）を「増やす」方向（右）へ動かしてください。'};
+          if(!t.lastPlayedAt || t.lastPlayedAt < t.stepEnteredAt) return {ok:false,msg:'動かした後に「黒字かどうか確認」を押してください。'};
+          if(t.lastPlayed && t.lastPlayed.profit >= 0) return {ok:true};
+          return {ok:false,msg:'まだ黒字になっていません。限界利益率をもう少し上げて、再度「黒字かどうか確認」を押してください。'};
+        }
+      },
+      {
+        sel: '#paramFixed',
+        title:'③-3 数値を動かしてみましょう：固定費',
+        body:'固定費（FC）を下げる方向へ動かし、黒字にしてください。<br>最後に<b>「黒字かどうか確認」</b>で黒字になればクリアです。',
+        extraElevate:['#cardGraph','#cv','#paramFixed','#fixedRange','#fixed','#play','#result'],
+        pulse:['#play'],
+        panelDock:'auto',
+        avoidSel:['#paramFixed','#fixedRange','#fixed','#play','#cv','#result'],
+        stickyGraph:true,
+        maskOpacity:0.52,
+        onEnter(){
+          setDefaults();
+          resetTourFlags();
+          markBaseline();
+          window.__mk_tour.stepEnteredAt = Date.now();
+        },
+        validate(){
+          const t = window.__mk_tour;
+          const b = t.baseline;
+          const now = calc();
+          if(now.fixed >= b.fixed) return {ok:false,msg:'固定費（FC）を「減らす」方向（左）へ動かしてください。'};
+          if(!t.lastPlayedAt || t.lastPlayedAt < t.stepEnteredAt) return {ok:false,msg:'動かした後に「黒字かどうか確認」を押してください。'};
+          if(t.lastPlayed && t.lastPlayed.profit >= 0) return {ok:true};
+          return {ok:false,msg:'まだ黒字になっていません。固定費をもう少し下げて、再度「黒字かどうか確認」を押してください。'};
+        }
+      },
+      {
+        sel:'#checkBtn',
+        title:'④ チャレンジ：固定費→限界利益率→売上で逆算',
+        body:'「必要売上高を考えてみましょう」にチェックを入れ、<br>①固定費 → ②限界利益率 → ③売上 の順に入力し、最後に<b>「答え合わせ」</b>を押してください。',
+        extraElevate:['#cardCtrl','#challengeToggle','#challengeBox','#paramFixed','#paramCMR','#paramSales','#checkBtn','#cardGraph','#cv','#play'],
+        pulse:['#challengeToggle','#checkBtn'],
+        panelDock:'top',
+        avoidSel:['#cv','#play','#result','#challengeToggle','#paramFixed','#paramCMR','#paramSales'],
+        stickyGraph:true,
+        maskOpacity:0.52,
+        onEnter(){
+          const t=$('challengeToggle');
+          if(t && !t.checked){
+            t.checked = true;
+            t.dispatchEvent(new Event('change', {bubbles:true}));
+          }
+          window.__mk_tour.stepEnteredAt = Date.now();
+        },
+        validate(){ return {ok:true}; }
+      },
+      {
+        sel:'#startTour',
+        title:'完了',
+        body:'このように、黒字を出すには売上↑/限界利益率↑/固定費↓の方向しかありません。<br>これでチュートリアルは完了です。必要に応じて、いつでも<b>「チュートリアル」</b>ボタンからやり直せます。<br><small>※完了時には「必要売上高を考えてみましょう」のチェックを外し、通常モードに戻ります。</small>',
+        extraElevate:['#startTour'],
+        pulse:[],
+        panelDock:'auto',
+        avoidSel:['#startTour'],
+        stickyGraph:false,
+        maskOpacity:0.52
+      }
     ];
 
     let tourIndex = 0;
-    let maskEl, focusEl, panelEl, prevBtn, nextBtn, skipBtn, titleEl, bodyEl, stepEl;
-    let elevatedEl = null;
+    let maskEl, panelEl, prevBtn, nextBtn, skipBtn, titleEl, bodyEl, stepEl, msgEl;
+    let elevatedEls = [];
+    let pulsedEls = [];
 
     function qs(sel){ return document.querySelector(sel); }
     function vv(){ return window.visualViewport || null; }
@@ -721,29 +977,142 @@ footer.mk-mini a{
     function vvWidth(){ const v=vv(); return v ? v.width : window.innerWidth; }
     function vvHeight(){ const v=vv(); return v ? v.height: window.innerHeight; }
 
-    // 安定スクロール：scrollIntoView の後に rAF×2 + scrollend を待ってから測定
     function stableScrollIntoView(el){
       return new Promise(resolve=>{
+        if(!el){ resolve(); return; }
         let done=false, timer=null;
         function finish(){ if(done) return; done=true; clearTimeout(timer); resolve(); }
-        // iOS Safari では scrollend が来ない場合があるのでタイムアウト補助
-        timer=setTimeout(finish, 350);
-        const onEnd=()=>{ window.removeEventListener('scrollend', onEnd); finish(); };
-        window.addEventListener('scrollend', onEnd, { once:true });
-        el.scrollIntoView({block:'center', behavior:'smooth'});
-        // rAF ダブルでフォールバック（アニメ前計測を避ける）
-        requestAnimationFrame(()=>requestAnimationFrame(()=>{}));
+        timer=setTimeout(finish, 260);
+        try{ el.scrollIntoView({block:'center', behavior:'smooth'}); }catch(_){ finish(); }
+        requestAnimationFrame(()=>requestAnimationFrame(finish));
       });
     }
 
+    function clearElevate(){
+      elevatedEls.forEach(el=>el.classList.remove('mk-tour-elevate'));
+      elevatedEls = [];
+    }
+    function applyElevate(step){
+      clearElevate();
+      const list = [];
+      const main = qs(step.sel);
+      if(main) list.push(main);
+      (step.extraElevate||[]).forEach(s=>{
+        const el = qs(s);
+        if(el) list.push(el);
+      });
+      const uniq = [...new Set(list)];
+      uniq.forEach(el=>el.classList.add('mk-tour-elevate'));
+      elevatedEls = uniq;
+    }
+
+    function clearPulse(){
+      pulsedEls.forEach(el=>el.classList.remove('mk-tour-pulse'));
+      pulsedEls = [];
+    }
+    function applyPulse(step){
+      clearPulse();
+      const list = [];
+      (step.pulse||[]).forEach(s=>{
+        const el = qs(s);
+        if(el) list.push(el);
+      });
+      const uniq = [...new Set(list)];
+      uniq.forEach(el=>el.classList.add('mk-tour-pulse'));
+      pulsedEls = uniq;
+    }
+
+    function applyStickyGraph(step){
+      const want = !!step.stickyGraph && window.innerWidth < 820;
+      document.body.classList.toggle('mk-tour-sticky-graph', want);
+    }
+
+    function ensureEls(){
+      if(maskEl) return;
+      maskEl = document.createElement('div'); maskEl.className='mk-tour-mask'; maskEl.tabIndex=-1;
+
+      panelEl = document.createElement('div'); panelEl.className='mk-tour-panel';
+      const head = document.createElement('div'); head.className='mk-tour-head';
+      stepEl = document.createElement('div'); stepEl.className='mk-tour-step';
+      const titleWrap = document.createElement('div'); titleWrap.className='mk-tour-title';
+      head.append(stepEl, titleWrap);
+      titleEl = titleWrap;
+
+      bodyEl = document.createElement('div'); bodyEl.className='mk-tour-body';
+      msgEl = document.createElement('div');
+      msgEl.style.cssText='margin-top:8px;color:#b91c1c;font-weight:900;display:none;';
+
+      const actions = document.createElement('div'); actions.className='mk-tour-actions';
+      prevBtn = document.createElement('button'); prevBtn.className='tbtn'; prevBtn.textContent='前へ';
+      nextBtn = document.createElement('button'); nextBtn.className='tbtn primary'; nextBtn.textContent='次へ';
+      skipBtn = document.createElement('button'); skipBtn.className='tbtn'; skipBtn.textContent='スキップ';
+      actions.append(prevBtn, skipBtn, nextBtn);
+
+      panelEl.append(head, bodyEl, msgEl, actions);
+      document.body.append(maskEl, panelEl);
+
+      skipBtn.addEventListener('click', endTour);
+      prevBtn.addEventListener('click', async ()=>{
+        if(tourIndex>0){
+          tourIndex--;
+          await gotoStep(tourIndex);
+        }
+      });
+      nextBtn.addEventListener('click', async ()=>{
+        const step = steps[tourIndex];
+        if(step && typeof step.validate==='function'){
+          const v = step.validate();
+          if(v && v.ok===false){
+            msgEl.textContent = v.msg || '操作を完了してください。';
+            msgEl.style.display='block';
+            return;
+          }
+        }
+        msgEl.style.display='none';
+        if(tourIndex < steps.length-1){
+          tourIndex++;
+          await gotoStep(tourIndex);
+        }else{
+          endTour();
+        }
+      });
+
+      document.addEventListener('keydown', (e)=>{
+        if(!panelEl || panelEl.style.display==='none') return;
+        if(e.key==='Escape'){ endTour(); }
+        else if(e.key==='ArrowRight'){ nextBtn.click(); }
+        else if(e.key==='ArrowLeft'){ prevBtn.click(); }
+      });
+
+      const v = vv();
+      if(v){
+        v.addEventListener('resize', ()=> placePanel());
+        v.addEventListener('scroll', ()=> placePanel());
+      }
+      window.addEventListener('resize', ()=> placePanel(), { passive:true });
+      window.addEventListener('scroll', ()=> placePanel(), { passive:true });
+      window.addEventListener('orientationchange', ()=> setTimeout(placePanel, 120));
+
+      // 結果（#result）が更新されたらパネルを自動再配置
+      if(resultEl){
+        try{
+          const mo = new MutationObserver(()=>{
+            if(panelEl && panelEl.style.display!=='none'){
+              requestAnimationFrame(()=>placePanel());
+            }
+          });
+          mo.observe(resultEl, {childList:true, characterData:true, subtree:true});
+        }catch(e){}
+      }
+    }
+
     function rectInVisualViewport(el){
-      const r = el.getBoundingClientRect(); // これは通常「可視ビューポート」基準
-      // ただしピンチズーム・URLバーでのずれに備え、offset を加味（固定配置の座標系と一致させる）
+      const r = el.getBoundingClientRect();
       const x = Math.round(r.left + vvOffsetX());
       const y = Math.round(r.top  + vvOffsetY());
-      const w = Math.round(Math.min(r.width,  vvWidth() - 16)); // 多少のはみ出し防止
+      const w = Math.round(Math.min(r.width,  vvWidth() - 16));
       const h = Math.round(Math.min(r.height, vvHeight() - 16));
-      const pad = 8;
+      const pad = 10;
       return {
         x: Math.max(8 + vvOffsetX(), x - pad),
         y: Math.max(8 + vvOffsetY(), y - pad),
@@ -752,132 +1121,157 @@ footer.mk-mini a{
       };
     }
 
-    function placeFocus(){
-      const step = steps[tourIndex]; const target = qs(step.sel);
-      if(!target){ console.warn('Step target not found:', step.sel); return; }
+    function overlapArea(a,b){
+      const x1=Math.max(a.left,b.left), y1=Math.max(a.top,b.top);
+      const x2=Math.min(a.right,b.right), y2=Math.min(a.bottom,b.bottom);
+      if(x2<=x1 || y2<=y1) return 0;
+      return (x2-x1)*(y2-y1);
+    }
 
-      // 持ち上げ管理
-      if(elevatedEl && elevatedEl !== target){
-        elevatedEl.classList.remove('mk-tour-elevate');
-      }
-      target.classList.add('mk-tour-elevate');
-      elevatedEl = target;
+    function resolveAvoidSelectors(step){
+      let sels = step.avoidSel;
+      if(!sels) sels = [];
+      if(typeof sels === 'string') sels = [sels];
+      if(!Array.isArray(sels)) sels = [];
+      if(step.sel && typeof step.sel === 'string') sels = [step.sel, ...sels];
+      return [...new Set(sels)];
+    }
 
-      const r = rectInVisualViewport(target);
-      focusEl.style.left = r.x + 'px';
-      focusEl.style.top  = r.y + 'px';
-      focusEl.style.width  = r.w + 'px';
-      focusEl.style.height = r.h + 'px';
+    function placePanel(){
+      const step = steps[tourIndex];
+      if(!step || !panelEl) return;
 
-      // パネル位置：可視ビューポート内に収める
+      const op = (typeof step.maskOpacity === 'number') ? step.maskOpacity : 0.52;
+      if(maskEl) maskEl.style.background = `rgba(15,23,42,${op})`;
+
+      const target = qs(step.sel) || qs('#cardGraph');
+      const r = target ? rectInVisualViewport(target) : {x:12+vvOffsetX(),y:12+vvOffsetY(),w:200,h:40};
+
       const panelW = Math.min(560, vvWidth()*0.92);
       const margin = 12;
+
+      panelEl.style.maxWidth = panelW + 'px';
+      const panelH = Math.min(panelEl.scrollHeight, Math.min(vvHeight()*0.62, 520));
+
+      const minX = vvOffsetX() + 8;
+      const maxX = vvOffsetX() + vvWidth() - panelW - 8;
+      let px = Math.min(Math.max(minX, r.x), maxX);
+
+      const minY = vvOffsetY() + 8;
+      const maxY = vvOffsetY() + vvHeight() - panelH - 8;
+
+      const avoidSels = resolveAvoidSelectors(step);
+      const avoidRects = [];
+      for(const s of avoidSels){
+        const el = document.querySelector(s);
+        if(!el) continue;
+        const rr = el.getBoundingClientRect();
+        avoidRects.push({
+          left: rr.left + vvOffsetX(),
+          top: rr.top + vvOffsetY(),
+          right: rr.right + vvOffsetX(),
+          bottom: rr.bottom + vvOffsetY()
+        });
+      }
+
+      function scoreFor(py){
+        const panel = { left:px, top:py, right:px+panelW, bottom:py+panelH };
+        let score = 0;
+        for(const ar of avoidRects){ score += overlapArea(panel, ar); }
+        score += Math.max(0, (minY - py)) * 50;
+        score += Math.max(0, (py - maxY)) * 50;
+        return score;
+      }
+
       const belowY = r.y + r.h + margin;
-      const aboveY = Math.max(8 + vvOffsetY(), r.y - margin - 170);
-      let px = Math.min(Math.max(8 + vvOffsetX(), r.x), vvOffsetX() + vvWidth() - panelW - 8);
-      let py = (belowY + 190 < vvOffsetY() + vvHeight()) ? belowY : aboveY;
+      const aboveY = r.y - margin - panelH;
+      const topY   = vvOffsetY() + 10;
+      const botY   = vvOffsetY() + vvHeight() - panelH - 10;
+
+      const candidates = [];
+      const dock = step.panelDock || 'auto';
+      if(dock === 'top')      candidates.push(aboveY, topY, belowY, botY);
+      else if(dock === 'bottom') candidates.push(belowY, botY, aboveY, topY);
+      else                   candidates.push(belowY, aboveY, topY, botY);
+
+      let bestY = null, bestScore = Infinity;
+      for(const c of candidates){
+        const y = Math.min(Math.max(c, minY), maxY);
+        const sc = scoreFor(y);
+        if(sc < bestScore){ bestScore = sc; bestY = y; }
+      }
+      const py = (bestY==null) ? Math.min(Math.max(topY, minY), maxY) : bestY;
 
       panelEl.style.left = px + 'px';
       panelEl.style.top  = py + 'px';
-      panelEl.style.maxWidth = panelW + 'px';
-
-      // 内容
-      stepEl.textContent = `STEP ${tourIndex+1} / ${steps.length}`;
-      titleEl.textContent = step.title;
-      bodyEl.innerHTML = step.body;
-
-      // ボタン
-      prevBtn.disabled = (tourIndex===0);
-      nextBtn.textContent = (tourIndex===steps.length-1) ? '完了' : '次へ';
     }
 
-    function ensureEls(){
-      if(maskEl) return;
-      maskEl = document.createElement('div'); maskEl.className='mk-tour-mask'; maskEl.tabIndex=-1;
-      focusEl = document.createElement('div'); focusEl.className='mk-tour-focus'; focusEl.setAttribute('aria-hidden','true');
-      panelEl = document.createElement('div'); panelEl.className='mk-tour-panel';
-      const head = document.createElement('div'); head.className='mk-tour-head';
-      stepEl = document.createElement('div'); stepEl.className='mk-tour-step';
-      const titleWrap = document.createElement('div'); titleWrap.className='mk-tour-title';
-      head.append(stepEl, titleWrap);
-      titleEl = titleWrap;
-      bodyEl = document.createElement('div'); bodyEl.className='mk-tour-body';
-      const actions = document.createElement('div'); actions.className='mk-tour-actions';
-      prevBtn = document.createElement('button'); prevBtn.className='tbtn'; prevBtn.textContent='前へ';
-      nextBtn = document.createElement('button'); nextBtn.className='tbtn primary'; nextBtn.textContent='次へ';
-      skipBtn = document.createElement('button'); skipBtn.className='tbtn'; skipBtn.textContent='スキップ';
-      actions.append(prevBtn, skipBtn, nextBtn);
-      panelEl.append(head, bodyEl, actions);
-      document.body.append(maskEl, focusEl, panelEl);
+    async function gotoStep(idx){
+      const step = steps[idx];
+      if(!step) return;
 
-      // イベント
-      skipBtn.addEventListener('click', endTour);
-      prevBtn.addEventListener('click', async ()=>{
-        if(tourIndex>0){ tourIndex--; await stableScrollIntoView(qs(steps[tourIndex].sel)); placeFocus(); }
-      });
-      nextBtn.addEventListener('click', async ()=>{
-        if(tourIndex < steps.length-1){ tourIndex++; await stableScrollIntoView(qs(steps[tourIndex].sel)); placeFocus(); }
-        else { endTour(); }
-      });
+      applyStickyGraph(step);
 
-      // キーボード（Esc/←/→）
-      function onKey(e){
-        if(!panelEl) return;
-        if(e.key==='Escape'){ endTour(); }
-        else if(e.key==='ArrowRight'){ nextBtn.click(); }
-        else if(e.key==='ArrowLeft'){ prevBtn.click(); }
+      stepEl.textContent = `STEP ${idx+1} / ${steps.length}`;
+      titleEl.textContent = step.title;
+      bodyEl.innerHTML = step.body;
+      prevBtn.disabled = (idx===0);
+      nextBtn.textContent = (idx===steps.length-1) ? '完了' : '次へ';
+      msgEl.style.display='none';
+
+      if(typeof step.onEnter === 'function'){
+        try{ step.onEnter(); }catch(e){ console.warn('[tour] onEnter error', e); }
       }
-      document.addEventListener('keydown', onKey);
+      await new Promise(r=>requestAnimationFrame(()=>r()));
 
-      // 背景クリックで次へ
-      maskEl.addEventListener('click', ()=> nextBtn.click());
+      applyElevate(step);
+      applyPulse(step);
 
-      // 画面変動に追従（スマホURLバー/ピンチズーム/キーボード展開）
-      const v = vv();
-      if(v){
-        v.addEventListener('resize', ()=> placeFocus());
-        v.addEventListener('scroll', ()=> placeFocus());
-      }
-      window.addEventListener('resize', ()=> placeFocus(), { passive:true });
-      window.addEventListener('scroll', ()=> placeFocus(), { passive:true });
-      window.addEventListener('orientationchange', ()=> setTimeout(placeFocus, 100));
+      const target = qs(step.sel);
+      await stableScrollIntoView(target);
+
+      requestAnimationFrame(()=>{ requestAnimationFrame(placePanel); });
     }
 
     async function startTour(idx=0){
-      gtag('event','tutorial_start',{step:idx+1});
-      ensureEls(); tourIndex = idx;
-      maskEl.style.display='block'; focusEl.style.display='block'; panelEl.style.display='block';
-      document.body.style.overflow='hidden';
-      await stableScrollIntoView(qs(steps[tourIndex].sel));
-      // rAFで描画を待ってから配置（スマホでのずれ軽減）
-      requestAnimationFrame(()=>{ requestAnimationFrame(placeFocus); });
+      try{ gtag('event','tutorial_start',{step:idx+1}); }catch(_){ }
+      ensureEls();
+      tourIndex = idx;
+      maskEl.style.display='block';
+      panelEl.style.display='block';
+      await gotoStep(tourIndex);
       nextBtn.focus();
     }
+
     function endTour(){
-      gtag('event','tutorial_end',{completed: (tourIndex===steps.length-1)});
-      if(maskEl){ maskEl.style.display='none'; }
-      if(focusEl){ focusEl.style.display='none'; }
-      if(panelEl){ panelEl.style.display='none'; }
-      document.body.style.overflow='';
-      if(elevatedEl){
-        elevatedEl.classList.remove('mk-tour-elevate');
-        elevatedEl = null;
+      try{ gtag('event','tutorial_end',{completed: (tourIndex===steps.length-1)}); }catch(_){ }
+      if(maskEl) maskEl.style.display='none';
+      if(panelEl) panelEl.style.display='none';
+      clearPulse();
+      clearElevate();
+      document.body.classList.remove('mk-tour-sticky-graph');
+
+      // 完了時に「必要売上高を考えてみましょう」をOFF
+      const c = document.getElementById('challengeToggle');
+      if(c && c.checked){
+        c.checked = false;
+        c.dispatchEvent(new Event('change', {bubbles:true}));
       }
-      try{ localStorage.setItem(TOUR_KEY,'1'); }catch(_){}
+
+      try{ localStorage.setItem(TOUR_KEY,'1'); }catch(_){ }
     }
 
-    // ボタンから開始
     const tourBtn = document.getElementById('startTour');
     if(tourBtn){ tourBtn.addEventListener('click', ()=> startTour(0)); }
 
-    // 初回のみヒント
     try{
       if(!localStorage.getItem(TOUR_KEY)){
         tourBtn.title = '初めての方はここからチュートリアルを開始できます';
       }
-    }catch(_){}
+    }catch(_){ }
   });
 })();
 </script>
+
 </body>
 </html>
